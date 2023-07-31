@@ -1,1 +1,278 @@
+final readme for combined analysis of Exp1 , Exp2, Exp3 16s and ITS. files are analyzed similar to Dada2 'Big Data' tutorial in that individual experiments have error rate inference performed separately but ASV tables are merged for ASV naming scheme consistency. With exception of seq table merging, analysis is more like basic dada2 tutorial. 
+Files were demultiplexed using idemp (https://github.com/yhwu/idemp) using the I1 file and mapping file reformatted (_simple.txt file), such as
+
+/homes/jpodowski/src/idemp/idemp -b ANL_Experiment1_simple.txt -I1 Undetermined_S0_L001_I1_001.fastq.gz -R1 Undetermined_S0_L001_R1_001.fastq.gz -R2 Undetermined_S0_L001_R2_001.fastq.gz -o ANL_exp1_demultiplexed
+
+these demultiplexed files were then renamed using
+for i in *.gz; do mv "${i}" "${i//Undetermined_S0_L001}"; done
+
+for i in *.gz; do mv "${i}" "${i//_001.fastq.gz_}"; done
+or
+for i in *.gz; do mv "${i}" "${i//_001.fastq_}"; done
+
+for i in _R1*; do mv "${i}" "${i/.fastq.gz/_R1.fastq.gz}"; done
+for i in _R2*; do mv "${i}" "${i/.fastq.gz/_R2.fastq.gz}"; done
+for i in _R2*; do mv "${i}" "${i/_R2/}"; done
+for i in _R1*; do mv "${i}" "${i/_R1/}"; done
+for i in *.gz; do mv "${i}" "${i/_R/.E3_R}"; done
+
+For exp3, ANL and UIUC were appended to correct samples as these were not present
+
+for i in *.gz; do mv "${i}" "${i/.E/.ANL.E}"; done
+or
+for i in *.gz; do mv "${i}" "${i/.E/.UIUC.E}"; done
+
+Once properly named samples were moved into new structured folders with exp1 exp2 exp3 as top level, 16s next level and anl uiuc as bottom level. sequences together in a folder will be processed (dada2 inference to seq table generation) and then will be merged together in a single seq table and chimeras will be removed, taxonomy assigned, and a single phyloseq object generated (with tax table and sample data) for all 16s data together. For analysis, each experiment will be broken off into separate phyloseq objects. This process will allow for consistent ASV naming scheme throughout
+
+library(phyloseq)
+library(dada2)
+library(microbiome)
+library(ggplot2)
+library(microbiomeMarker)
+library(Biostrings)
+library(ShortRead)
+
+
+# UIUC Experiment 3 processing
+
+path <- "/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/exp3/16s/uiuc"
+
+fnFs <- sort(list.files(path, pattern="_R1.fastq.gz", full.names = TRUE))
+fnRs <- sort(list.files(path, pattern="_R2.fastq.gz", full.names = TRUE))
+
+sample.names <- sapply(strsplit(basename(fnFs), "_"), '[', 1)
+
+
+filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
+names(filtFs) <- sample.names
+names(filtRs) <- sample.names
+
+out <- filterAndTrim(fnFs,filtFs,fnRs,filtRs, trimLeft=10, maxN=0, maxEE=c(2,2), truncQ=2 , rm.phix=TRUE, compress=TRUE, multithread=TRUE)
+errF <- learnErrors(filtFs, multithread=TRUE)
+errR <- learnErrors(filtRs, multithread=TRUE)
+dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
+dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
+mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
+seqtab <- makeSequenceTable(mergers)
+saveRDS(seqtab, "/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/uiuc_exp3_16s.rds")
+
+rm(list = ls())
+
+# ANL Experiment 3 processing
+
+path <- "/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/exp3/16s/anl"
+
+fnFs <- sort(list.files(path, pattern="_R1.fastq.gz", full.names = TRUE))
+fnRs <- sort(list.files(path, pattern="_R2.fastq.gz", full.names = TRUE))
+
+sample.names <- sapply(strsplit(basename(fnFs), "_"), '[', 1)
+
+
+filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
+names(filtFs) <- sample.names
+names(filtRs) <- sample.names
+
+out <- filterAndTrim(fnFs,filtFs,fnRs,filtRs, trimLeft=10, maxN=0, maxEE=c(2,2), truncQ=2 , rm.phix=TRUE, compress=TRUE, multithread=TRUE)
+errF <- learnErrors(filtFs, multithread=TRUE)
+errR <- learnErrors(filtRs, multithread=TRUE)
+dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
+dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
+mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
+seqtab <- makeSequenceTable(mergers)
+saveRDS(seqtab, "/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/anl_exp3_16s.rds")
+
+rm(list = ls())
+
+# ANL Experiment 2 processing
+
+path <- "/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/exp2/16s/anl"
+
+fnFs <- sort(list.files(path, pattern="_R1.fastq.gz", full.names = TRUE))
+fnRs <- sort(list.files(path, pattern="_R2.fastq.gz", full.names = TRUE))
+
+sample.names <- sapply(strsplit(basename(fnFs), "_"), '[', 1)
+
+
+filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
+names(filtFs) <- sample.names
+names(filtRs) <- sample.names
+
+out <- filterAndTrim(fnFs,filtFs,fnRs,filtRs, trimLeft=10, maxN=0, maxEE=c(2,2), truncQ=2 , rm.phix=TRUE, compress=TRUE, multithread=TRUE)
+errF <- learnErrors(filtFs, multithread=TRUE)
+errR <- learnErrors(filtRs, multithread=TRUE)
+dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
+dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
+mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
+seqtab <- makeSequenceTable(mergers)
+saveRDS(seqtab, "/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/anl_exp2_16s.rds")
+
+rm(list = ls())
+
+# UIUC Experiment 2 Processing
+
+path <- "/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/exp2/16s/uiuc"
+
+fnFs <- sort(list.files(path, pattern="_R1.fastq.gz", full.names = TRUE))
+fnRs <- sort(list.files(path, pattern="_R2.fastq.gz", full.names = TRUE))
+
+sample.names <- sapply(strsplit(basename(fnFs), "_"), '[', 1)
+
+
+filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
+names(filtFs) <- sample.names
+names(filtRs) <- sample.names
+
+out <- filterAndTrim(fnFs,filtFs,fnRs,filtRs, trimLeft=10, maxN=0, maxEE=c(2,2), truncQ=2 , rm.phix=TRUE, compress=TRUE, multithread=TRUE)
+errF <- learnErrors(filtFs, multithread=TRUE)
+errR <- learnErrors(filtRs, multithread=TRUE)
+dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
+dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
+mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
+seqtab <- makeSequenceTable(mergers)
+saveRDS(seqtab, "/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/uiuc_exp2_16s.rds")
+
+rm(list = ls())
+
+# ANL Experiment 1 Processing
+
+
+path <- "/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/exp1/16s/anl"
+
+fnFs <- sort(list.files(path, pattern="_R1.fastq.gz", full.names = TRUE))
+fnRs <- sort(list.files(path, pattern="_R2.fastq.gz", full.names = TRUE))
+
+sample.names <- sapply(strsplit(basename(fnFs), "_"), '[', 1)
+
+
+filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
+names(filtFs) <- sample.names
+names(filtRs) <- sample.names
+
+out <- filterAndTrim(fnFs,filtFs,fnRs,filtRs, trimLeft=10, maxN=0, maxEE=c(2,2), truncQ=2 , rm.phix=TRUE, compress=TRUE, multithread=TRUE)
+errF <- learnErrors(filtFs, multithread=TRUE)
+errR <- learnErrors(filtRs, multithread=TRUE)
+dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
+dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
+mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
+seqtab <- makeSequenceTable(mergers)
+saveRDS(seqtab, "/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/anl_exp1_16s.rds")
+
+rm(list = ls())
+
+
+# UIUC Experiment 1 Processing
+
+
+path <- "/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/exp1/16s/uiuc"
+
+fnFs <- sort(list.files(path, pattern="_R1.fastq.gz", full.names = TRUE))
+fnRs <- sort(list.files(path, pattern="_R2.fastq.gz", full.names = TRUE))
+
+sample.names <- sapply(strsplit(basename(fnFs), "_"), '[', 1)
+
+
+filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
+names(filtFs) <- sample.names
+names(filtRs) <- sample.names
+
+out <- filterAndTrim(fnFs,filtFs,fnRs,filtRs, trimLeft=10, maxN=0, maxEE=c(2,2), truncQ=2 , rm.phix=TRUE, compress=TRUE, multithread=TRUE)
+errF <- learnErrors(filtFs, multithread=TRUE)
+errR <- learnErrors(filtRs, multithread=TRUE)
+dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
+dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
+mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
+seqtab <- makeSequenceTable(mergers)
+saveRDS(seqtab, "/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/uiuc_exp1_16s.rds")
+
+rm(list = ls())
+
+# merge all 6 runs together
+
+st1 <- readRDS("/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/anl_exp1_16s.rds")
+st2 <- readRDS("/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/anl_exp2_16s.rds")
+st3 <- readRDS("/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/anl_exp3_16s.rds")
+st4 <- readRDS("/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/uiuc_exp1_16s.rds")
+st5 <- readRDS("/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/uiuc_exp2_16s.rds")
+st6 <- readRDS("/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/uiuc_exp3_16s.rds")
+
+st.all <- mergeSequenceTables(st1, st2, st3, st4, st5, st6)
+
+seqtab <- removeBimeraDenovo(st.all, method="consensus", multithread=TRUE)
+
+taxa <- assignTaxonomy(seqtab, "/homes/jpodowski/project/na22_contamination/raw_fastqs/all_exp_demultiplexed/tax_classification/silva_nr99_v138.1_train_set.fa.gz",  multithread=TRUE)
+taxa <- addSpecies(taxa, "/homes/jpodowski/project/na22_contamination/raw_fastqs/all_exp_demultiplexed/tax_classification/silva_species_assignment_v138.1.fa.gz")
+
+NA22_All_Exp_16s_phyloseq_sampledata <- read.table("/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/NA22_All_Exp_16s_phyloseq_sampledata", header=TRUE, sep="\t", na.strings=" ")
+sampledf <- as.data.frame(NA22_All_Exp_16s_phyloseq_sampledata)
+rownames(sampledf) <- sampledf$SampleName
+sampledf <- sampledf[,-1]
+sampledf$Day <- factor(sampledf$Day, levels=c("D0","D1","D7","D28","D100"))
+sampledf$ChemConc <- factor(sampledf$ChemConc, levels=c("C0.1","C1","C5","C10","C100"))
+ps <- phyloseq(otu_table(seqtab, taxa_are_rows = FALSE), sample_data(sampledf), tax_table(taxa))
+dna <- Biostrings::DNAStringSet(taxa_names(ps))
+names(dna) <- taxa_names(ps)
+ps <- merge_phyloseq(ps, dna)
+taxa_names(ps) <- paste0("ASV", seq(ntaxa(ps)))
+writeXStringSet(refseq(ps), "asv.fna", format="fasta")
+
+ps_trimmed <- filter_taxa(ps, function(x) sum(x > 1) > (0.05*length(x)), TRUE)
+ps_trimmed_pruned <- prune_samples(sample_sums(ps_trimmed) >= 100, ps_trimmed)
+ps_trimmed_pruned_prop <-  transform_sample_counts(ps_trimmed_pruned, function(otu) otu/sum(otu))
+
+ord.nmds.bray.all <- ordinate(ps_trimmed_pruned_prop, method = "NMDS", distance = "bray")
+all_exp_lefse <- run_lefse(ps_trimmed_pruned_prop, lda_cutoff = 3, group = "Chem", taxa_rank = "none")
+
+ps_exp1 <- subset_samples(ps_trimmed_pruned, Experiment%in%c("E1"))
+ps_exp2 <- subset_samples(ps_trimmed_pruned, Experiment%in%c("E2"))
+ps_exp3 <- subset_samples(ps_trimmed_pruned, Experiment%in%c("E3"))
+
+ps_exp1_anl <- subset_samples(ps_exp1, Institution%in%c("ANL"))
+ps_exp1_uiuc <- subset_samples(ps_exp1, Institution%in%c("UIUC"))
+ps_exp2_anl <- subset_samples(ps_exp2, Institution%in%c("ANL"))
+ps_exp2_uiuc <- subset_samples(ps_exp2, Institution%in%c("UIUC"))
+ps_exp3_anl <- subset_samples(ps_exp3, Institution%in%c("ANL"))
+ps_exp3_uiuc <- subset_samples(ps_exp3, Institution%in%c("UIUC"))
+
+ps.prop_exp1_uiuc <- transform_sample_counts(ps_exp1_uiuc, function(otu) otu/sum(otu))
+ps.prop_exp1_anl <- transform_sample_counts(ps_exp1_anl, function(otu) otu/sum(otu))
+ps.prop_exp2_uiuc <- transform_sample_counts(ps_exp2_uiuc, function(otu) otu/sum(otu))
+ps.prop_exp2_anl <- transform_sample_counts(ps_exp2_anl, function(otu) otu/sum(otu))
+ps.prop_exp3_anl <- transform_sample_counts(ps_exp3_anl, function(otu) otu/sum(otu))
+ps.prop_exp3_uiuc <- transform_sample_counts(ps_exp3_uiuc, function(otu) otu/sum(otu))
+
+ord.nmds.bray_exp1_uiuc <- ordinate(ps.prop_exp1_uiuc, method = "NMDS", distance = "bray")
+ord.nmds.bray_exp1_anl <- ordinate(ps.prop_exp1_anl, method = "NMDS", distance = "bray")
+ord.nmds.bray_exp2_uiuc <- ordinate(ps.prop_exp2_uiuc, method = "NMDS", distance = "bray")
+ord.nmds.bray_exp2_anl <- ordinate(ps.prop_exp2_anl, method = "NMDS", distance = "bray")
+ord.nmds.bray_exp3_uiuc <- ordinate(ps.prop_exp3_uiuc, method = "NMDS", distance = "bray")
+ord.nmds.bray_exp3_anl <- ordinate(ps.prop_exp3_anl, method = "NMDS", distance = "bray")
+
+exp1_uiuc_deseq2 <- run_deseq2(ps_exp1_uiuc, "Chem", p_adjust = "bonferroni", pvalue_cutoff = 0.05, taxa_rank = "none")
+exp1_uiuc_lefse <- run_lefse(ps_exp1_uiuc, lda_cutoff = 3, group = "Chem", taxa_rank = "none")
+
+exp2_uiuc_deseq2 <- run_deseq2(ps_exp2_uiuc, "Chem", p_adjust = "bonferroni", pvalue_cutoff = 0.05, taxa_rank = "none")
+exp2_uiuc_lefse <- run_lefse(ps_exp2_uiuc, lda_cutoff = 3, group = "Chem", taxa_rank = "none")
+
+exp3_uiuc_deseq2 <- run_deseq2(ps_exp3_uiuc, "Chem", p_adjust = "bonferroni", pvalue_cutoff = 0.05, taxa_rank = "none")
+exp3_uiuc_lefse <- run_lefse(ps_exp3_uiuc, lda_cutoff = 3, group = "Chem", taxa_rank = "none")
+
+exp1_anl_deseq2 <- run_deseq2(ps_exp1_anl, "Chem", p_adjust = "bonferroni", pvalue_cutoff = 0.05, taxa_rank = "none")
+exp1_anl_lefse <- run_lefse(ps_exp1_anl, lda_cutoff = 3, group = "Chem", taxa_rank = "none")
+
+exp2_anl_deseq2 <- run_deseq2(ps_exp2_anl, "Chem", p_adjust = "bonferroni", pvalue_cutoff = 0.05, taxa_rank = "none")
+exp2_anl_lefse <- run_lefse(ps_exp2_anl, lda_cutoff = 3, group = "Chem", taxa_rank = "none")
+
+exp3_anl_deseq2 <- run_deseq2(ps_exp3_anl, "Chem", p_adjust = "bonferroni", pvalue_cutoff = 0.05, taxa_rank = "none")
+exp3_anl_lefse <- run_lefse(ps_exp3_anl, lda_cutoff = 3, group = "Chem", taxa_rank = "none")
+
+
+save.image("/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/NA22_All_Exp_16s.RData")
+
+
 
