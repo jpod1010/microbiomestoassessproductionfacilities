@@ -1,0 +1,54 @@
+# plotting
+
+soil_color_values <- c("CRO"="Red", "DAN"="Green", "PR1"="Blue", "SAN"="Purple", "DRU"="Yellow","P2"="Pink", "P15"="Black", "P02"="Pink" )
+chemical_color_values <-c("NC"="Black", "K"="Red", "KT"="Green","KTA"="Purple","KTO"="Blue")
+day_color_values <- c("D0"="black","D1"="red","D7"="blue","D28"="green","D100"="purple")
+
+library(ggpubr)
+library(microbiome)
+ 
+
+# figure 2
+
+plot_ordination(ps.prop_exp1_anl, ord.nmds.bray_exp1_anl, color = "Soil", shape="Chem") + scale_color_manual(values=soil_color_values) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), axis.text.x = element_text(angle=45, hjust = 0.5) , axis.text = element_text(face ="bold",size = 16)) + geom_point(size=3)
+
+# figure 3
+
+plot_richness(ps_exp1_anl, x="Chem", measures="Shannon", color = "Soil", shape=NA) + geom_boxplot() + scale_color_manual(values=soil_color_values) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), axis.text.x = element_text(angle=45, hjust = 0.5) , axis.text = element_text(face ="bold",size = 16))
+
+# figure 4
+
+boxplot_abundance(ps_trimmed_pruned_prop, x="Soil", y="ASV15", show.points = FALSE) + geom_boxplot(aes(fill=sample_data(ps_trimmed_pruned_prop)$Chem)) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), legend.title = element_blank() ,axis.text = element_text(size = 12, face="bold"), axis.text.x.bottom = element_text(vjust = 0.3)) + xlab("")  + scale_fill_manual(values=chemical_color_values) + ylim(values=c(0,0.075))
+
+boxplot_abundance(ps_trimmed_pruned_prop, x="Soil", y="ASV7", show.points = FALSE) + geom_boxplot(aes(fill=sample_data(ps_trimmed_pruned_prop)$Chem)) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), legend.title = element_blank() ,axis.text = element_text(size = 12, face="bold"), axis.text.x.bottom = element_text(vjust = 0.3)) + xlab("")  + scale_fill_manual(values=chemical_color_values) + ylim(values=c(0,0.075))
+
+
+# figure 5
+
+boxplot_abundance(ps_trimmed_pruned_prop, x="Chem", y="ASV7", show.points = FALSE) + geom_boxplot(aes(fill=sample_data(ps_trimmed_pruned_prop)$ChemConc)) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), legend.title = element_blank() ,axis.text = element_text(size = 12, face="bold"), axis.text.x.bottom = element_text(vjust = 0.3)) + xlab("") + ylim(c(0,0.1)) + xlim(c("KT","KTO"))
+
+boxplot_abundance(ps_trimmed_pruned_prop, x="Chem", y="ASV7", show.points = FALSE) + geom_boxplot(aes(fill=sample_data(ps_trimmed_pruned_prop)$Day)) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), legend.title = element_blank() ,axis.text = element_text(size = 12, face="bold"), axis.text.x.bottom = element_text(vjust = 0.3)) + xlab("") + ylim(c(0,0.1)) + xlim(c("KT","KTO")) + scale_fill_manual(values=day_color_value)
+
+# Figure 6
+
+tbp_analysis_genome_equivalent_normalized <- read.delim("~/Downloads/na22/finalanalysis/mg_processing/tbp_analysis_genome_equivalent_normalized")
+
+symnum.args <- list(cutpoints = c(0, 0.0001, 0.001, 0.01, 0.05, Inf), symbols = c("****", "***", "**", "*", "ns"))
+
+ggplot(subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2" ), aes(x=Chem, y=value)) + geom_boxplot(aes(fill=subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2" )$Soil)) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), legend.title = element_blank() ,axis.text = element_text(size = 12, face="bold"), axis.text.x.bottom = element_text(vjust = 0.3)) + xlab("") + scale_fill_manual(values=soil_color_values) + ylab ("Phosphotriesterase genes \n per genome") + stat_compare_means(comparisons = list(c("KTO","NC"), c("KT","NC")),label =  "p.signif")
+
+# Figure 7
+
+kruskal.test(value ~ Day, data=subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2"))
+
+kruskal.test(value ~ Concentration, data=subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2"))
+
+kruskal.test(value ~ Soil, data=subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2"))
+
+kruskal.test(value ~ Chem, data=subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2"))
+
+pairwise.wilcox.test(subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2")$value, subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2")$Chem)
+
+pairwise.wilcox.test(subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2")$value, subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2")$Concentration)
+
+pairwise.wilcox.test(subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2")$value, subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2")$Day)
