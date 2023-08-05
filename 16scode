@@ -133,6 +133,7 @@ rownames(sampledf) <- sampledf$SampleName
 sampledf <- sampledf[,-1]
 sampledf$Day <- factor(sampledf$Day, levels=c("D0","D1","D7","D28","D100"))
 sampledf$ChemConc <- factor(sampledf$ChemConc, levels=c("C0.1","C1","C5","C10","C100"))
+rownames(sampledf) <- NA22_All_Exp_16s_phyloseq_sampledata$SampleName
 ps <- phyloseq(otu_table(seqtab, taxa_are_rows = FALSE), sample_data(sampledf), tax_table(taxa))
 dna <- Biostrings::DNAStringSet(taxa_names(ps))
 names(dna) <- taxa_names(ps)
