@@ -1,0 +1,11 @@
+# code for generating phosphotrieasterse genes per genome values
+
+# forward qc'd reads were aligned against all gene calls from all MAGs using blastx and only top hits where kept
+
+for i in *__R1_qtrimmed.fastq.gz; do diamond blastx -q "${i}" -d tbp_gene_analysis/NA22_DREP95-gene-clusters.dmnd -p 12 -f 6 -o "${i//_L00M__R1_qtrimmed.fastq.gz}_ag_NA22_MAGs.blastx"; awk '{print $1,$2}' "${i//_L00M__R1_qtrimmed.fastq.gz}_ag_NA22_MAGs.blastx" | awk '!a[$1]++' | awk '{print $2,$1}' | sort -k 1,1 | awk '{print $2,$1}' |  sed 's/ /\t/g' > "${i//_L00M__R1_qtrimmed.fastq.gz_}_ag_NA22_MAGs.blastx_tophits"; rm "${i//_L00M__R1_qtrimmed.fastq.gz}_ag_NA22_MAGs.blastx"; done
+
+# microbe census was used to generate genome copies for each sample
+
+for i in *__R1_qtrimmed.fastq.gz; do run_microbe_census.py -t 12 "${i}" "${i//__R1_qtrimmed.fastq.gz}_microbecensusout"; done
+
+ 
