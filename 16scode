@@ -16,9 +16,18 @@ for i in _R2*; do mv "${i}" "${i/_R2/}"; done
 for i in _R1*; do mv "${i}" "${i/_R1/}"; done
 for i in *.gz; do mv "${i}" "${i/_R/.E3_R}"; done
 
+For exp3, ANL was appended to correct samples as these were not present
+
+for i in *.gz; do mv "${i}" "${i/.E/.ANL.E}"; done
 
 
-Once properly named samples were moved into new structured folders with exp1 exp2 exp3 as top level, 16s next level and anl bottom level. sequences together in a folder will be processed (dada2 inference to seq table generation) and then will be merged together in a single seq table and chimeras will be removed, taxonomy assigned, and a single phyloseq object generated (with tax table and sample data) for all 16s data together. For analysis, each experiment will be broken off into separate phyloseq objects. This process will allow for consistent ASV naming scheme throughout
+Once properly named samples were moved into new structured folders with exp1 exp2 exp3 as top level, 16s, anl as bottom level. sequences together in a folder will be processed (dada2 inference to seq table generation) and then will be merged together in a single seq table and chimeras will be removed, taxonomy assigned, and a single phyloseq object generated (with tax table and sample data) for all 16s data together and all ITS data together. For analysis, each experiment will be broken off into separate phyloseq objects. This process will allow for consistent ASV naming scheme throughout
+
+On olive.cels.anl.gov
+
+conda activate dada2
+
+R
 
 library(phyloseq)
 library(dada2)
@@ -83,6 +92,7 @@ saveRDS(seqtab, "/home/jpodowski/project/na22_contamination/raw_fastqs/final_all
 rm(list = ls())
 
 
+
 # ANL Experiment 1 Processing
 
 
@@ -111,16 +121,13 @@ saveRDS(seqtab, "/home/jpodowski/project/na22_contamination/raw_fastqs/final_all
 rm(list = ls())
 
 
-
-
 # merge all 3 runs together
 
 st1 <- readRDS("/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/anl_exp1_16s.rds")
 st2 <- readRDS("/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/anl_exp2_16s.rds")
 st3 <- readRDS("/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/anl_exp3_16s.rds")
 
-
-st.all <- mergeSequenceTables(st1, st2, st3, st4, st5, st6)
+st.all <- mergeSequenceTables(st1, st2, st3)
 
 seqtab <- removeBimeraDenovo(st.all, method="consensus", multithread=TRUE)
 
@@ -152,6 +159,10 @@ ps_exp1 <- subset_samples(ps_trimmed_pruned, Experiment%in%c("E1"))
 ps_exp2 <- subset_samples(ps_trimmed_pruned, Experiment%in%c("E2"))
 ps_exp3 <- subset_samples(ps_trimmed_pruned, Experiment%in%c("E3"))
 
+ps_exp1_anl <- subset_samples(ps_exp1, Institution%in%c("ANL"))
+ps_exp2_anl <- subset_samples(ps_exp2, Institution%in%c("ANL"))
+ps_exp3_anl <- subset_samples(ps_exp3, Institution%in%c("ANL"))
+
 
 
 ps.prop_exp1_anl <- transform_sample_counts(ps_exp1_anl, function(otu) otu/sum(otu))
@@ -162,9 +173,10 @@ ps.prop_exp3_anl <- transform_sample_counts(ps_exp3_anl, function(otu) otu/sum(o
 
 
 ord.nmds.bray_exp1_anl <- ordinate(ps.prop_exp1_anl, method = "NMDS", distance = "bray")
-ord.nmds.bray_exp2_anl <- ordinate(ps.prop_exp2_anl, method = "NMDS", distance = "bray")
-ord.nmds.bray_exp3_anl <- ordinate(ps.prop_exp3_anl, method = "NMDS", distance = "bray")
 
+ord.nmds.bray_exp2_anl <- ordinate(ps.prop_exp2_anl, method = "NMDS", distance = "bray")
+
+ord.nmds.bray_exp3_anl <- ordinate(ps.prop_exp3_anl, method = "NMDS", distance = "bray")
 
 
 exp1_anl_deseq2 <- run_deseq2(ps_exp1_anl, "Chem", p_adjust = "bonferroni", pvalue_cutoff = 0.05, taxa_rank = "none")
@@ -178,6 +190,3 @@ exp3_anl_lefse <- run_lefse(ps_exp3_anl, lda_cutoff = 3, group = "Chem", taxa_ra
 
 
 save.image("/home/jpodowski/project/na22_contamination/raw_fastqs/final_all_demultiplexed/NA22_All_Exp_16s.RData")
-
-
-
