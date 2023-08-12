@@ -1,1 +1,20 @@
 # code for assembly, binning, abundance assessment, anvio pan genomes
+
+#samples were acquired downloaded from UIUC ftp site as R1 and R2 files and interleaved, qtrimmed and bbnormed, and assembled
+
+/home/jpodowski/src/bbmap/reformat.sh in="${i}" in2="${i//_R1_001.fastq.gz}_R2_001.fastq.gz" out="${i//_R1_001.fastq.gz}_interleaved.fastq.gz"
+
+/home/jpodowski/src/bbmap/bbduk.sh  in="${i}" out="${i//.fastq.gz}_qtrimmed.fastq.gz"  trimq=30 qtrim=r
+
+/home/jpodowski/src/bbmap/bbnorm.sh in="${i}" out="${i//.fastq.gz}_bbnorm.fastq.gz" target=40 mindepth=2
+
+megahit --presets meta-large --12 "${i}" -o "${i//_L00M_interleaved_qtrimmed_bbnorm.fastq.gz}_megahit" -t 24 -m 0.3
+
+# samples were then mapped to, binning and refined with metawrap. mapping was carried out all against all per experiment - for each assembly in experiment 1, all 36 reads files were mapped against each assembly for one binning run. For experiment 2, all 60 reads files were mapped against each assembly for one binning run.
+
+metawrap binning -o "${i}initialbins" -t 36 -a "${i}/final.contigs.fa" --interleaved --metabat2 --maxbin2 --concoct *.fastq
+
+metawrap bin_refinement -o "${i}_refined" -t 36 -A ${i}/metabat2_bins/ -B ${i}/maxbin2_bins/ -C ${i}/concoct_bins/ -c 75 -x 5
+
+
+
