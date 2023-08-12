@@ -64,6 +64,27 @@ sed 's/"//g' NA22_MGs_exp3_deseq2 | awk '{print $2,$3,$4,$5,$6,"Deseq2"}' | sort
 sed 's/"//g' NA22_MGs_exp3_deseq2 | awk '{print $2,$3,$4,$5,$6,Deseq2}' | sort -k 1,1 | grep -v "enrich" > NA22_MGs_exp3_deseq2_clean
 join -a 1 -a 2 -e NONE -j 1 NA22_MGs_exp3_deseq2_clean NA22_MGs_exp3_lefse_clean > NA22_MGs_exp3_DA_out
 
+# in order to identify shared genes among DA genomes, anvio was used to annotate and carry out pan genome analysis in anvio 7.1. Rhodopseudomonas palstrius and Sphingomonas sp. RSMS were also imported for comparison
+
+anvi-gen-contigs-database -f X.fa -o X.db
+
+anvi-run-kegg-kofams -c X.db
+
+anvi-run-ncbi-cogs -c X.db --search-with blastp
+
+anvi-run-pfams -c X.db
+
+# with these contigs dbs annotated, we then run pangenome analysis
+
+anvi-gen-genomes-storage -e external_genomes_pangenome -o TBP_MAGs-GENOMES.db
+
+anvi-pan-genome -g TBP_MAGs-GENOMES.db -o TBP_Genome_Pangenome -num-threads 28
+
+anvi-script-add-default-collection -p TBP_Genome_Pangenome/TBP_DEG-PAN.db
+
+anvi-summarize -p TBP_Genome_Pangenome/TBP_DEG-PAN.db -g TBP_MAGs-GENOMES.db -C DEFAULT -o TBP_Pangenome_Summary
+
+
 
 
 
