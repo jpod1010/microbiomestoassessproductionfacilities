@@ -10,24 +10,30 @@ library(microbiome)
 
 # figure 2
 
-plot_ordination(ps.prop_exp1_anl, ord.nmds.bray_exp1_anl, color = "Soil", shape="Chem") + scale_color_manual(values=soil_color_values) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), axis.text.x = element_text(angle=45, hjust = 0.5) , axis.text = element_text(face ="bold",size = 16)) + geom_point(size=3)
+ps.prop_exp1_anl_notechreps <- subset_samples(ps.prop_exp1_anl, TechRep != "T2" & TechRep != "T3" )
+
+ord.nmds.bray_exp1_anl_notechreps <- ordinate(ps.prop_exp1_anl_notechreps, method = "NMDS", distance = "bray")
+
+plot_ordination(ps.prop_exp1_anl_notechreps, ord.nmds.bray_exp1_anl_notechreps, color = "Soil", shape="Chem") + scale_color_manual(values=soil_color_values) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), axis.text.x = element_text(angle=45, hjust = 0.5) , axis.text = element_text(face ="bold",size = 16)) + geom_point(size=3)
 
 # figure 3
 
-plot_richness(ps_exp1_anl, x="Chem", measures="Shannon", color = "Soil", shape=NA) + geom_boxplot() + scale_color_manual(values=soil_color_values) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), axis.text.x = element_text(angle=45, hjust = 0.5) , axis.text = element_text(face ="bold",size = 16))
+ps_exp1_anl_notechreps <- subset_samples(ps_exp1_anl, TechRep != "T2" & TechRep != "T3" )
+
+plot_richness(ps_exp1_anl_notechreps, x="Chem", measures="Shannon", color = "Soil", shape=NA) + geom_boxplot() + scale_color_manual(values=soil_color_values) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), axis.text.x = element_text(angle=45, hjust = 0.5) , axis.text = element_text(face ="bold",size = 16))
 
 # figure 4
 
-boxplot_abundance(ps_trimmed_pruned_prop, x="Soil", y="ASV15", show.points = FALSE) + geom_boxplot(aes(fill=sample_data(ps_trimmed_pruned_prop)$Chem)) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), legend.title = element_blank() ,axis.text = element_text(size = 12, face="bold"), axis.text.x.bottom = element_text(vjust = 0.3)) + xlab("")  + scale_fill_manual(values=chemical_color_values) + ylim(values=c(0,0.075))
+boxplot_abundance(ps_trimmed_pruned_prop_nouiuc_notechreps, x="Soil", y="ASV15", show.points = FALSE) + geom_boxplot(aes(fill=sample_data(ps_trimmed_pruned_prop_nouiuc_notechreps)$Chem)) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), legend.title = element_blank() ,axis.text = element_text(size = 12, face="bold"), axis.text.x.bottom = element_text(vjust = 0.3)) + xlab("")  + scale_fill_manual(values=chemical_color_values) + ylim(values=c(0,0.075))
 
-boxplot_abundance(ps_trimmed_pruned_prop, x="Soil", y="ASV7", show.points = FALSE) + geom_boxplot(aes(fill=sample_data(ps_trimmed_pruned_prop)$Chem)) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), legend.title = element_blank() ,axis.text = element_text(size = 12, face="bold"), axis.text.x.bottom = element_text(vjust = 0.3)) + xlab("")  + scale_fill_manual(values=chemical_color_values) + ylim(values=c(0,0.075))
+boxplot_abundance(ps_trimmed_pruned_prop_nouiuc_notechreps, x="Soil", y="ASV7", show.points = FALSE) + geom_boxplot(aes(fill=sample_data(ps_trimmed_pruned_prop_nouiuc_notechreps)$Chem)) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), legend.title = element_blank() ,axis.text = element_text(size = 12, face="bold"), axis.text.x.bottom = element_text(vjust = 0.3)) + xlab("")  + scale_fill_manual(values=chemical_color_values) + ylim(values=c(0,0.075))
 
 
 # figure 5
 
-boxplot_abundance(ps_trimmed_pruned_prop, x="Chem", y="ASV7", show.points = FALSE) + geom_boxplot(aes(fill=sample_data(ps_trimmed_pruned_prop)$ChemConc)) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), legend.title = element_blank() ,axis.text = element_text(size = 12, face="bold"), axis.text.x.bottom = element_text(vjust = 0.3)) + xlab("") + ylim(c(0,0.1)) + xlim(c("KT","KTO"))
+boxplot_abundance(ps_trimmed_pruned_prop_nouiuc_notechreps, x="Chem", y="ASV7", show.points = FALSE) + geom_boxplot(aes(fill=sample_data(ps_trimmed_pruned_prop_nouiuc_notechreps)$ChemConc)) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), legend.title = element_blank() ,axis.text = element_text(size = 12, face="bold"), axis.text.x.bottom = element_text(vjust = 0.3)) + xlab("") + ylim(c(0,0.1)) + xlim(c("KT","KTO"))
 
-boxplot_abundance(ps_trimmed_pruned_prop, x="Chem", y="ASV7", show.points = FALSE) + geom_boxplot(aes(fill=sample_data(ps_trimmed_pruned_prop)$Day)) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), legend.title = element_blank() ,axis.text = element_text(size = 12, face="bold"), axis.text.x.bottom = element_text(vjust = 0.3)) + xlab("") + ylim(c(0,0.1)) + xlim(c("KT","KTO")) + scale_fill_manual(values=day_color_value)
+boxplot_abundance(ps_trimmed_pruned_prop_nouiuc_notechreps, x="Chem", y="ASV7", show.points = FALSE) + geom_boxplot(aes(fill=sample_data(ps_trimmed_pruned_prop_nouiuc_notechreps)$Day)) + theme(legend.key.size = unit(2, "line"),panel.background = element_blank() ,  axis.line = element_line(colour = "black", size=1.5), plot.caption = element_text(hjust=0, size=16), axis.title = element_text(face="bold", size=16), legend.title = element_blank() ,axis.text = element_text(size = 12, face="bold"), axis.text.x.bottom = element_text(vjust = 0.3)) + xlab("") + ylim(c(0,0.1)) + xlim(c("KT","KTO")) + scale_fill_manual(values=day_color_values)
 
 # Figure 6
 
@@ -52,3 +58,8 @@ pairwise.wilcox.test(subset.data.frame(tbp_analysis_genome_equivalent_normalized
 pairwise.wilcox.test(subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2")$value, subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2")$Concentration)
 
 pairwise.wilcox.test(subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2")$value, subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2")$Day)
+
+
+mean(data.frame(otu_table(subset_samples(ps_trimmed_pruned_prop, Chem%in%c("NC"))))$ASV7)*100
+
+mean((subset.data.frame(tbp_analysis_genome_equivalent_normalized, Experiment == "EXP2" & Chem == "NC")$value))
