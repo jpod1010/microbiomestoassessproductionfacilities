@@ -24,6 +24,49 @@ dRep dereplicate . -p 12 -comp 75 -con 5 -g all_bins_renamed/*.fa -sa 0.95
 
 gtdbtk classify_wf -x fa --cpus 48 --pplacer_cpus 48 --genome_dir dereplicated_genomes --out_dir gtdbtk_out
 
-checkm lineage_wf -x fa -t 48 --pplacer_threads 48 --tab_table -f 180_Genomes_CheckM_Out dereplicated_genomes checkm_out
+checkm lineage_wf -x fa -t 48 --pplacer_threads 48 --tab_table -f NA22_dereplicated_Genomes_CheckM_Out dereplicated_genomes checkm_out
+
+# then abundance in each sample for each of the non-redundant bins was assessed using
+
+metawrap quant_bins -b dereplicated_genomes -o NA22_quant_bins -t 36 *.fastq
+
+# abundance values were taken from these files, imported to R and then differential abundance calculation was carried out similar for ASVs from 16s
+
+library(phyloseq)
+library(microbiome)
+library(microbiomeMarker)
+
+
+NA22_MGs_Exp3_phyloseq_sampledata <- read.table("/Users/justinpodowski/Downloads/na22/finalanalysis/mg_processing/NA22_Exp3_MG_phyloseq_sampledata.txt",header=TRUE, sep="\t", na.strings=" ")
+NA22_MGs_Exp3_phyloseq_taxa <- read.table("/Users/justinpodowski/Downloads/na22/finalanalysis/mg_processing/NA22_Exp3_MG_phyloseq_taxa.txt",header=TRUE, sep="\t", na.strings=" ")
+NA22_MGs_Exp3_phyloseq_otutable <- read.table("/Users/justinpodowski/Downloads/na22/finalanalysis/mg_processing/bin_abundance_table_phyloseq.txt",header=TRUE, sep="\t", na.strings=" ")
+
+MG_taxa <- as.matrix(NA22_MGs_Exp3_phyloseq_taxa)
+MG_sampledata <- as.data.frame(NA22_MGs_Exp3_phyloseq_sampledata)
+MG_otutable <- as.data.frame(NA22_MGs_Exp3_phyloseq_otutable)
+
+rownames(MG_sampledata) <- MG_sampledata$SampleName
+rownames(MG_otutable) <- MG_otutable$X
+rownames(MG_taxa) <- NA22_MGs_Exp3_phyloseq_taxa$X
+
+MG_sampledata <- MG_sampledata[,-1]
+MG_otutable <- MG_otutable[,-1]
+MG_taxa <- MG_taxa[,-1]
+
+ps_MG <- phyloseq(otu_table(MG_otutable, taxa_are_rows = FALSE), sample_data(MG_sampledata), tax_table(MG_taxa))
+
+exp3_mg_lefse <- run_lefse(ps_MG, lda_cutoff = 3, group = "Chem", taxa_rank = "none")
+exp3_mg_deseq2 <- run_deseq2(ps_MG, "Chem", p_adjust = "bonferroni", pvalue_cutoff = 0.05, taxa_rank = "none")
+
+write.table(exp3_mg_lefse, "NA22_MGs_exp3_lefse")
+write.table(exp3_mg_deseq2, "NA22_MGs_exp3_lefse")
+sed 's/"//g' NA22_MGs_exp3_deseq2 | awk '{print $2,$3,$4,$5,$6,"Deseq2"}' | sort -k 1,1 | grep -v "enrich" > NA22_MGs_exp3_deseq2_clean
+sed 's/"//g' NA22_MGs_exp3_deseq2 | awk '{print $2,$3,$4,$5,$6,Deseq2}' | sort -k 1,1 | grep -v "enrich" > NA22_MGs_exp3_deseq2_clean
+join -a 1 -a 2 -e NONE -j 1 NA22_MGs_exp3_deseq2_clean NA22_MGs_exp3_lefse_clean > NA22_MGs_exp3_DA_out
+
+
+
+
+
 
 
