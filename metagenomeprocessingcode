@@ -16,5 +16,14 @@ metawrap binning -o "${i}initialbins" -t 36 -a "${i}/final.contigs.fa" --interle
 
 metawrap bin_refinement -o "${i}_refined" -t 36 -A ${i}/metabat2_bins/ -B ${i}/maxbin2_bins/ -C ${i}/concoct_bins/ -c 75 -x 5
 
+# when all 96 binning runs were complete, bins were renamed based on sample name and combined into a folder to be dereplicated, as 
+
+dRep dereplicate . -p 12 -comp 75 -con 5 -g all_bins_renamed/*.fa -sa 0.95
+
+# we then run gtdbtk and checkm on the dereplicated bins
+
+gtdbtk classify_wf -x fa --cpus 48 --pplacer_cpus 48 --genome_dir dereplicated_genomes --out_dir gtdbtk_out
+
+checkm lineage_wf -x fa -t 48 --pplacer_threads 48 --tab_table -f 180_Genomes_CheckM_Out dereplicated_genomes checkm_out
 
 
