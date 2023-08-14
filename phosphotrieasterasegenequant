@@ -10,7 +10,7 @@ for i in *__R1_qtrimmed.fastq.gz; do run_microbe_census.py -t 12 "${i}" "${i//__
 
 # taking the blastx output, we search for GC_00018205, which is the GC name of GC_00003819 in the all NA22 genome pangenome analysis
 
-for i in *tophits; do samplename=$(echo "${i}" | sed 's/-.*//g' | rev | sed '0,/_/s//-/' |  sed '1 s/.*-//g' | rev ); grep -c "GC_00018205" "${i}" | awk -v var=$samplename '{print var,$1,"EXP1"}' >> tbp_gene_counts_exp1; done
+for i in *tophits; do samplename=$(echo "${i}" | sed 's/-.*//g' | rev | sed '0,/_/s//-/' |  sed '1 s/.*-//g' | rev ); grep -c "GC_00018205" "${i}" | awk -v var=$samplename '{print var,$1,"EXP2"}' >> tbp_gene_counts_exp1; done
 
 
 # this is merged in with genome copies values to normalize
